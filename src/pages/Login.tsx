@@ -224,7 +224,6 @@ const Login = () => {
           className="text-center mt-6 text-sm text-white/50"
         >
           <p>Copyright © 2025 Eastern Coalfields. All rights reserved.</p>
-          <p className="mt-1">@aunicorn</p>
         </motion.div>
       </motion.div>
     </div>
