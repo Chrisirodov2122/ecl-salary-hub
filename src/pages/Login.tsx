@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { Eye, EyeOff, User, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import ParticleBackground from '@/components/ParticleBackground';
 import eclLogo from '@/assets/ecl-logo.png';
 import loginBg from '@/assets/login-bg.png';
 
@@ -14,9 +13,22 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isShaking, setIsShaking] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Parallax effect based on mouse movement
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 20;
+      const y = (e.clientY / window.innerHeight - 0.5) * 20;
+      setMousePosition({ x, y });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,10 +47,15 @@ const Login = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
-      {/* Background Image */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+      {/* Background Image with Parallax */}
+      <motion.div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110"
         style={{ backgroundImage: `url(${loginBg})` }}
+        animate={{
+          x: mousePosition.x,
+          y: mousePosition.y,
+        }}
+        transition={{ type: 'spring', stiffness: 50, damping: 30 }}
       />
 
       {/* Dark overlay for better contrast */}
@@ -51,9 +68,6 @@ const Login = () => {
           background: 'linear-gradient(135deg, hsl(222 58% 8% / 0.7) 0%, hsl(215 35% 18% / 0.5) 50%, hsl(222 58% 8% / 0.7) 100%)',
         }}
       />
-
-      {/* Particle animation */}
-      <ParticleBackground />
 
       {/* Login Card */}
       <motion.div
@@ -209,7 +223,7 @@ const Login = () => {
           transition={{ delay: 1.2, duration: 0.5 }}
           className="text-center mt-6 text-sm text-white/50"
         >
-          <p>Copyright © 2024 Eastern Coalfields. All rights reserved.</p>
+          <p>Copyright © 2025 Eastern Coalfields. All rights reserved.</p>
           <p className="mt-1">@aunicorn</p>
         </motion.div>
       </motion.div>
