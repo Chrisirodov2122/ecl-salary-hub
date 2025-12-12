@@ -80,7 +80,7 @@ const Login = () => {
             transition={{ delay: 0.3, duration: 0.5 }}
             className="text-2xl font-bold text-center text-foreground mb-2"
           >
-            ECL Employee Portal
+            ECL Salary Sight
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
@@ -88,12 +88,12 @@ const Login = () => {
             transition={{ delay: 0.4, duration: 0.5 }}
             className="text-muted-foreground text-center mb-8 text-sm"
           >
-            Salary Sight - View your earnings
+            View your earnings securely
           </motion.p>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Employee ID */}
+            {/* Username */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -103,7 +103,7 @@ const Login = () => {
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Employee ID"
+                  placeholder="Username"
                   value={employeeId}
                   onChange={(e) => setEmployeeId(e.target.value)}
                   className="input-field pl-12"

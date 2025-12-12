@@ -1,21 +1,33 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Wallet, TrendingDown, Banknote, FileText, Bell, LogOut, User } from 'lucide-react';
+import { Wallet, TrendingDown, Banknote, FileText, Bell, LogOut, User, LayoutDashboard, Receipt, ClipboardList } from 'lucide-react';
 import StatCard from '@/components/dashboard/StatCard';
 import SalaryBarChart from '@/components/dashboard/SalaryBarChart';
 import SalaryTrendChart from '@/components/dashboard/SalaryTrendChart';
 import EmployeeTable from '@/components/dashboard/EmployeeTable';
+import PayrollTab from '@/components/dashboard/PayrollTab';
+import ReportsTab from '@/components/dashboard/ReportsTab';
 import eclLogo from '@/assets/ecl-logo.png';
+
+type TabType = 'dashboard' | 'payroll' | 'reports';
 
 const Dashboard = () => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
+
+  const tabs = [
+    { id: 'dashboard' as TabType, label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'payroll' as TabType, label: 'Payroll', icon: Receipt },
+    { id: 'reports' as TabType, label: 'Reports', icon: ClipboardList },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,16 +44,18 @@ const Dashboard = () => {
             <div className="flex items-center gap-8">
               <img src={eclLogo} alt="ECL" className="h-10 object-contain" />
               <nav className="hidden md:flex items-center gap-1">
-                {['Dashboard', 'Payroll', 'Employees', 'Reports'].map((item, index) => (
+                {tabs.map((tab) => (
                   <button
-                    key={item}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      index === 0
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
+                      activeTab === tab.id
                         ? 'text-primary bg-primary/10'
                         : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     }`}
                   >
-                    {item}
+                    <tab.icon className="w-4 h-4" />
+                    {tab.label}
                   </button>
                 ))}
               </nav>
@@ -69,69 +83,95 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Mobile Tab Navigation */}
+        <div className="md:hidden border-t border-border">
+          <div className="flex">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 py-3 text-sm font-medium text-center transition-colors ${
+                  activeTab === tab.id
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </motion.header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        {/* Page Title */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.5 }}
-          className="mb-6 lg:mb-8"
-        >
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Salary Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Overview of employee salary data and analytics</p>
-        </motion.div>
+        {activeTab === 'dashboard' && (
+          <>
+            {/* Page Title */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+              className="mb-6 lg:mb-8"
+            >
+              <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Salary Dashboard</h1>
+              <p className="text-muted-foreground mt-1">Overview of employee salary data and analytics</p>
+            </motion.div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
-          <StatCard
-            title="Total Gross"
-            value="₹4.52 Cr"
-            change="+2.5% from last month"
-            changeType="positive"
-            icon={Wallet}
-            iconBg="bg-primary"
-            delay={0.1}
-          />
-          <StatCard
-            title="Total Net"
-            value="₹3.85 Cr"
-            change="+2.1%"
-            changeType="positive"
-            icon={Banknote}
-            iconBg="bg-ecl-green"
-            delay={0.15}
-          />
-          <StatCard
-            title="Total Deductions"
-            value="₹67.0 L"
-            change="-1.2%"
-            changeType="negative"
-            icon={TrendingDown}
-            iconBg="bg-amber-500"
-            delay={0.2}
-          />
-          <StatCard
-            title="Headcount"
-            value="1,450"
-            change="+12 new hires"
-            changeType="neutral"
-            icon={FileText}
-            iconBg="bg-ecl-slate"
-            delay={0.25}
-          />
-        </div>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+              <StatCard
+                title="Total Gross"
+                value="₹4.52 Cr"
+                change="+2.5% from last month"
+                changeType="positive"
+                icon={Wallet}
+                iconBg="bg-primary"
+                delay={0.1}
+              />
+              <StatCard
+                title="Total Net"
+                value="₹3.85 Cr"
+                change="+2.1%"
+                changeType="positive"
+                icon={Banknote}
+                iconBg="bg-ecl-green"
+                delay={0.15}
+              />
+              <StatCard
+                title="Total Deductions"
+                value="₹67.0 L"
+                change="-1.2%"
+                changeType="negative"
+                icon={TrendingDown}
+                iconBg="bg-amber-500"
+                delay={0.2}
+              />
+              <StatCard
+                title="Headcount"
+                value="1,450"
+                change="+12 new hires"
+                changeType="neutral"
+                icon={FileText}
+                iconBg="bg-ecl-slate"
+                delay={0.25}
+              />
+            </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
-          <SalaryBarChart />
-          <SalaryTrendChart />
-        </div>
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 mb-6 lg:mb-8">
+              <SalaryBarChart />
+              <SalaryTrendChart />
+            </div>
 
-        {/* Employee Table */}
-        <EmployeeTable />
+            {/* Employee Table */}
+            <EmployeeTable />
+          </>
+        )}
+
+        {activeTab === 'payroll' && <PayrollTab />}
+        {activeTab === 'reports' && <ReportsTab />}
       </main>
 
       {/* Footer */}
