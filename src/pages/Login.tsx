@@ -5,6 +5,7 @@ import { Eye, EyeOff, User, Lock } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import ParticleBackground from '@/components/ParticleBackground';
 import eclLogo from '@/assets/ecl-logo.png';
+import loginBg from '@/assets/login-bg.png';
 
 const Login = () => {
   const [employeeId, setEmployeeId] = useState('');
@@ -34,21 +35,20 @@ const Login = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
-      {/* Animated gradient background */}
+      {/* Background Image */}
       <div
-        className="absolute inset-0 animate-gradient"
-        style={{
-          background: 'linear-gradient(135deg, hsl(222 58% 8%) 0%, hsl(222 47% 15%) 25%, hsl(215 35% 18%) 50%, hsl(222 47% 12%) 75%, hsl(222 58% 8%) 100%)',
-          backgroundSize: '400% 400%',
-        }}
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${loginBg})` }}
       />
 
-      {/* Overlay pattern */}
+      {/* Dark overlay for better contrast */}
+      <div className="absolute inset-0 bg-black/40" />
+
+      {/* Subtle gradient overlay */}
       <div
-        className="absolute inset-0 opacity-10"
+        className="absolute inset-0 opacity-60"
         style={{
-          backgroundImage: `radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
-                            radial-gradient(circle at 75% 75%, rgba(34, 197, 94, 0.2) 0%, transparent 50%)`,
+          background: 'linear-gradient(135deg, hsl(222 58% 8% / 0.7) 0%, hsl(215 35% 18% / 0.5) 50%, hsl(222 58% 8% / 0.7) 100%)',
         }}
       />
 
