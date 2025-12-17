@@ -2,16 +2,17 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Wallet, TrendingDown, Banknote, FileText, Bell, LogOut, User, LayoutDashboard, Receipt, ClipboardList } from 'lucide-react';
+import { Wallet, TrendingDown, Banknote, FileText, Bell, LogOut, User, LayoutDashboard, Receipt, ClipboardList, Calendar } from 'lucide-react';
 import StatCard from '@/components/dashboard/StatCard';
 import SalaryBarChart from '@/components/dashboard/SalaryBarChart';
 import SalaryTrendChart from '@/components/dashboard/SalaryTrendChart';
 import EmployeeTable from '@/components/dashboard/EmployeeTable';
 import PayrollTab from '@/components/dashboard/PayrollTab';
 import ReportsTab from '@/components/dashboard/ReportsTab';
+import FinancialYearReportTab from '@/components/dashboard/FinancialYearReportTab';
 import eclLogo from '@/assets/ecl-logo.png';
 
-type TabType = 'dashboard' | 'payroll' | 'reports';
+type TabType = 'dashboard' | 'payroll' | 'reports' | 'fy-report';
 
 const Dashboard = () => {
   const { logout, user } = useAuth();
@@ -27,6 +28,7 @@ const Dashboard = () => {
     { id: 'dashboard' as TabType, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'payroll' as TabType, label: 'Payroll', icon: Receipt },
     { id: 'reports' as TabType, label: 'Reports', icon: ClipboardList },
+    { id: 'fy-report' as TabType, label: 'FY Report', icon: Calendar },
   ];
 
   return (
@@ -172,6 +174,7 @@ const Dashboard = () => {
 
         {activeTab === 'payroll' && <PayrollTab />}
         {activeTab === 'reports' && <ReportsTab />}
+        {activeTab === 'fy-report' && <FinancialYearReportTab />}
       </main>
 
       {/* Footer */}

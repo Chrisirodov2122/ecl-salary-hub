@@ -13,6 +13,7 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isShaking, setIsShaking] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const { login } = useAuth();
@@ -30,9 +31,13 @@ const Login = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
+
+    // Simulate network delay for better UX
+    await new Promise((resolve) => setTimeout(resolve, 800));
 
     const result = login(employeeId, password);
 
@@ -42,6 +47,7 @@ const Login = () => {
       setError(result.error || 'Login failed');
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 500);
+      setIsLoading(false);
     }
   };
 
@@ -193,14 +199,31 @@ const Login = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.5 }}
             >
-              <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2">
-                Sign In
-                <motion.span
-                  animate={{ x: [0, 4, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                >
-                  →
-                </motion.span>
+              <button 
+                type="submit" 
+                disabled={isLoading}
+                className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-70"
+              >
+                {isLoading ? (
+                  <>
+                    <motion.div
+                      className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 0.8, ease: 'linear' }}
+                    />
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    Sign In
+                    <motion.span
+                      animate={{ x: [0, 4, 0] }}
+                      transition={{ repeat: Infinity, duration: 1.5 }}
+                    >
+                      →
+                    </motion.span>
+                  </>
+                )}
               </button>
             </motion.div>
           </form>
