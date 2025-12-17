@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Calendar, Building2, MapPin, Filter, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 const fullEmployeeData = [
   { code: 'ECL001', name: 'Rajesh Kumar', department: 'Mining', collieryArea: 'Rajmahal', month: 'Jan 2024', gross: '₹1,35,000', net: '₹92,000' },
@@ -73,6 +77,23 @@ const PayrollTab = () => {
     setCurrentPage(1);
   };
 
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setSelectedMonth('All Months');
+    setSelectedDepartment('All Departments');
+    setSelectedCollieryArea('All Areas');
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = searchQuery || selectedMonth !== 'All Months' || selectedDepartment !== 'All Departments' || selectedCollieryArea !== 'All Areas';
+
+  const activeFilterCount = [
+    searchQuery,
+    selectedMonth !== 'All Months' ? selectedMonth : null,
+    selectedDepartment !== 'All Departments' ? selectedDepartment : null,
+    selectedCollieryArea !== 'All Areas' ? selectedCollieryArea : null,
+  ].filter(Boolean).length;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -80,67 +101,126 @@ const PayrollTab = () => {
       transition={{ duration: 0.5 }}
       className="stat-card"
     >
-      {/* Filters */}
-      <div className="flex flex-col gap-4 mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold text-foreground">Payroll Data</h2>
+          {activeFilterCount > 0 && (
+            <Badge variant="secondary" className="bg-primary/10 text-primary">
+              {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''} active
+            </Badge>
+          )}
+        </div>
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearAllFilters}
+            className="text-muted-foreground hover:text-foreground gap-1"
+          >
+            <X className="w-4 h-4" />
+            Clear all
+          </Button>
+        )}
+      </div>
+
+      {/* Filters Card */}
+      <div className="bg-muted/30 rounded-xl p-4 mb-6 border border-border/50">
+        <div className="flex items-center gap-2 mb-4">
+          <Filter className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium text-foreground">Filters</span>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
+            <Input
               type="text"
-              placeholder="Search by name or ID..."
+              placeholder="Search name or ID..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 resetFilters();
               }}
-              className="input-field pl-10 py-2 text-sm min-w-[200px]"
+              className="pl-10 bg-background"
             />
           </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={selectedMonth}
-            onChange={(e) => {
-              setSelectedMonth(e.target.value);
-              resetFilters();
-            }}
-            className="input-field py-2 px-3 text-sm min-w-[130px] bg-card"
-          >
-            {months.map((month) => (
-              <option key={month} value={month}>
-                {month}
-              </option>
-            ))}
-          </select>
-          <select
-            value={selectedDepartment}
-            onChange={(e) => {
-              setSelectedDepartment(e.target.value);
-              resetFilters();
-            }}
-            className="input-field py-2 px-3 text-sm min-w-[150px] bg-card"
-          >
-            {departments.map((dept) => (
-              <option key={dept} value={dept}>
-                {dept}
-              </option>
-            ))}
-          </select>
-          <select
-            value={selectedCollieryArea}
-            onChange={(e) => {
-              setSelectedCollieryArea(e.target.value);
-              resetFilters();
-            }}
-            className="input-field py-2 px-3 text-sm min-w-[150px] bg-card"
-          >
-            {collieryAreas.map((area) => (
-              <option key={area} value={area}>
-                {area}
-              </option>
-            ))}
-          </select>
+
+          {/* Month Filter */}
+          <div className="space-y-1.5">
+            <Select
+              value={selectedMonth}
+              onValueChange={(value) => {
+                setSelectedMonth(value);
+                resetFilters();
+              }}
+            >
+              <SelectTrigger className="bg-background">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  <SelectValue placeholder="Select Month" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {months.map((month) => (
+                  <SelectItem key={month} value={month}>
+                    {month}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Department Filter */}
+          <div className="space-y-1.5">
+            <Select
+              value={selectedDepartment}
+              onValueChange={(value) => {
+                setSelectedDepartment(value);
+                resetFilters();
+              }}
+            >
+              <SelectTrigger className="bg-background">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-muted-foreground" />
+                  <SelectValue placeholder="Select Department" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {departments.map((dept) => (
+                  <SelectItem key={dept} value={dept}>
+                    {dept}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Colliery Area Filter */}
+          <div className="space-y-1.5">
+            <Select
+              value={selectedCollieryArea}
+              onValueChange={(value) => {
+                setSelectedCollieryArea(value);
+                resetFilters();
+              }}
+            >
+              <SelectTrigger className="bg-background">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                  <SelectValue placeholder="Select Area" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {collieryAreas.map((area) => (
+                  <SelectItem key={area} value={area}>
+                    {area}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
