@@ -1,12 +1,24 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Search, ChevronLeft, ChevronRight, Calendar, Building2, MapPin, Filter, X } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Calendar, Building2, MapPin, Filter, X, Upload, FileSpreadsheet, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import * as XLSX from 'xlsx';
 
-const fullEmployeeData = [
+interface EmployeeRecord {
+  code: string;
+  name: string;
+  department: string;
+  collieryArea: string;
+  month: string;
+  gross: string;
+  net: string;
+}
+
+const defaultEmployeeData: EmployeeRecord[] = [
   { code: 'ECL001', name: 'Rajesh Kumar', department: 'Mining', collieryArea: 'Rajmahal', month: 'Jan 2024', gross: '₹1,35,000', net: '₹92,000' },
   { code: 'ECL001', name: 'Rajesh Kumar', department: 'Mining', collieryArea: 'Rajmahal', month: 'Feb 2024', gross: '₹1,36,000', net: '₹93,000' },
   { code: 'ECL001', name: 'Rajesh Kumar', department: 'Mining', collieryArea: 'Rajmahal', month: 'Mar 2024', gross: '₹1,37,000', net: '₹94,000' },
@@ -49,15 +61,96 @@ const months = ['All Months', 'Jan 2024', 'Feb 2024', 'Mar 2024', 'Apr 2024', 'M
 const departments = ['All Departments', 'Mining', 'HR', 'Finance', 'Operations', 'IT'];
 const collieryAreas = ['All Areas', 'Rajmahal', 'Sonepur Bazari', 'Kunustoria', 'Sripur', 'Kajora'];
 
+type UploadStatus = 'idle' | 'loading' | 'success' | 'error';
+
 const PayrollTab = () => {
+  const [employeeData, setEmployeeData] = useState<EmployeeRecord[]>(defaultEmployeeData);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('All Months');
   const [selectedDepartment, setSelectedDepartment] = useState('All Departments');
   const [selectedCollieryArea, setSelectedCollieryArea] = useState('All Areas');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>('idle');
+  const [uploadMessage, setUploadMessage] = useState('');
+  const [recordCount, setRecordCount] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const itemsPerPage = 10;
 
-  const filteredData = fullEmployeeData.filter((employee) => {
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadStatus('loading');
+    setUploadMessage('Reading file...');
+
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      try {
+        setUploadMessage('Parsing data...');
+        const data = e.target?.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        setUploadMessage('Processing records...');
+        
+        // Simulate processing time for better UX
+        setTimeout(() => {
+          const processedData: EmployeeRecord[] = jsonData.map((row: any) => ({
+            code: String(row['Employee Code'] || row['code'] || ''),
+            name: String(row['Name'] || row['name'] || ''),
+            department: String(row['Department'] || row['department'] || ''),
+            collieryArea: String(row['Colliery Area'] || row['collieryArea'] || row['Area'] || ''),
+            month: String(row['Month'] || row['month'] || ''),
+            gross: String(row['Gross'] || row['gross'] || ''),
+            net: String(row['Net'] || row['net'] || ''),
+          })).filter(record => record.code && record.name);
+
+          if (processedData.length === 0) {
+            setUploadStatus('error');
+            setUploadMessage('No valid records found. Please check your file format.');
+            return;
+          }
+
+          setEmployeeData(processedData);
+          setRecordCount(processedData.length);
+          setUploadStatus('success');
+          setUploadMessage(`Successfully imported ${processedData.length} records!`);
+          setCurrentPage(1);
+        }, 1000);
+      } catch (error) {
+        setUploadStatus('error');
+        setUploadMessage('Error reading file. Please ensure it is a valid CSV or XLSX file.');
+      }
+    };
+
+    reader.onerror = () => {
+      setUploadStatus('error');
+      setUploadMessage('Failed to read file. Please try again.');
+    };
+
+    reader.readAsBinaryString(file);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const closeUploadDialog = () => {
+    setIsUploadOpen(false);
+    setUploadStatus('idle');
+    setUploadMessage('');
+  };
+
+  const filteredData = employeeData.filter((employee) => {
     const matchesSearch =
       employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       employee.code.toLowerCase().includes(searchQuery.toLowerCase());
@@ -101,6 +194,100 @@ const PayrollTab = () => {
       transition={{ duration: 0.5 }}
       className="stat-card"
     >
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv,.xlsx,.xls"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+
+      {/* Upload Dialog */}
+      <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="w-5 h-5 text-primary" />
+              Upload Dataset
+            </DialogTitle>
+            <DialogDescription>
+              Upload a CSV or XLSX file containing payroll data
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {uploadStatus === 'idle' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                onClick={handleUploadClick}
+              >
+                <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-foreground font-medium mb-1">Click to upload</p>
+                <p className="text-sm text-muted-foreground">CSV or XLSX files supported</p>
+              </motion.div>
+            )}
+
+            {uploadStatus === 'loading' && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center justify-center py-8"
+              >
+                <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+                <p className="text-foreground font-medium">{uploadMessage}</p>
+                <div className="w-48 h-2 bg-muted rounded-full mt-4 overflow-hidden">
+                  <motion.div
+                    className="h-full bg-primary rounded-full"
+                    initial={{ width: '0%' }}
+                    animate={{ width: '100%' }}
+                    transition={{ duration: 2, ease: 'easeInOut' }}
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {uploadStatus === 'success' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center py-8"
+              >
+                <CheckCircle2 className="w-16 h-16 text-ecl-green mb-4" />
+                <p className="text-foreground font-medium text-lg">{uploadMessage}</p>
+                <p className="text-sm text-muted-foreground mt-2">{recordCount} employee records loaded</p>
+                <Button onClick={closeUploadDialog} className="mt-6">
+                  Done
+                </Button>
+              </motion.div>
+            )}
+
+            {uploadStatus === 'error' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center justify-center py-8"
+              >
+                <AlertCircle className="w-16 h-16 text-destructive mb-4" />
+                <p className="text-foreground font-medium">{uploadMessage}</p>
+                <Button variant="outline" onClick={() => setUploadStatus('idle')} className="mt-6">
+                  Try Again
+                </Button>
+              </motion.div>
+            )}
+          </div>
+
+          {uploadStatus === 'idle' && (
+            <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground mb-2">Expected columns:</p>
+              <p>Employee Code, Name, Department, Colliery Area, Month, Gross, Net</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
@@ -111,17 +298,28 @@ const PayrollTab = () => {
             </Badge>
           )}
         </div>
-        {hasActiveFilters && (
+        <div className="flex items-center gap-2">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            onClick={clearAllFilters}
-            className="text-muted-foreground hover:text-foreground gap-1"
+            onClick={() => setIsUploadOpen(true)}
+            className="gap-2"
           >
-            <X className="w-4 h-4" />
-            Clear all
+            <Upload className="w-4 h-4" />
+            Upload Dataset
           </Button>
-        )}
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearAllFilters}
+              className="text-muted-foreground hover:text-foreground gap-1"
+            >
+              <X className="w-4 h-4" />
+              Clear all
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Filters Card */}
