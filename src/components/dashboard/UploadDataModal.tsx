@@ -38,8 +38,13 @@ const UploadDataModal = ({ onDataUploaded }: UploadDataModalProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processFile = useCallback(async (file: File) => {
-    setIsLoading(true);
+    // Close dialog first so the full-screen loader is visible
+    setIsOpen(false);
     setUploadComplete(false);
+    
+    // Small delay to let dialog close before showing loader
+    await new Promise(resolve => setTimeout(resolve, 100));
+    setIsLoading(true);
 
     try {
       const data = await file.arrayBuffer();
@@ -64,6 +69,9 @@ const UploadDataModal = ({ onDataUploaded }: UploadDataModalProps) => {
       setRecordCount(processedData.length);
       setIsLoading(false);
       setUploadComplete(true);
+      
+      // Re-open dialog to show success message
+      setIsOpen(true);
 
       if (onDataUploaded) {
         onDataUploaded(processedData);
@@ -79,6 +87,7 @@ const UploadDataModal = ({ onDataUploaded }: UploadDataModalProps) => {
 
     } catch (error) {
       setIsLoading(false);
+      setIsOpen(true);
       toast.error('Failed to process file. Please check the format.');
     }
   }, [onDataUploaded]);
