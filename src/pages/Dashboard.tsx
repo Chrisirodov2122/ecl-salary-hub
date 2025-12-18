@@ -10,6 +10,7 @@ import EmployeeTable from '@/components/dashboard/EmployeeTable';
 import PayrollTab from '@/components/dashboard/PayrollTab';
 import ReportsTab from '@/components/dashboard/ReportsTab';
 import FinancialYearReportTab from '@/components/dashboard/FinancialYearReportTab';
+import UploadDataModal from '@/components/dashboard/UploadDataModal';
 import eclLogo from '@/assets/ecl-logo.png';
 
 type TabType = 'dashboard' | 'payroll' | 'reports' | 'fy-report';
@@ -60,6 +61,7 @@ const Dashboard = () => {
                     {tab.label}
                   </button>
                 ))}
+                <UploadDataModal />
               </nav>
             </div>
 
