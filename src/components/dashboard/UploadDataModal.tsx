@@ -1,24 +1,10 @@
 import { useState, useCallback, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Upload, FileSpreadsheet, X, CheckCircle2 } from 'lucide-react';
+import { Upload, FileSpreadsheet, CheckCircle2 } from 'lucide-react';
 import { MultiStepLoader } from '@/components/ui/multi-step-loader';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
-
-export interface EmployeeRecord {
-  employeeCode: string;
-  name: string;
-  department: string;
-  collieryArea: string;
-  month: string;
-  gross: number;
-  net: number;
-}
-
-interface UploadDataModalProps {
-  onDataUploaded?: (data: EmployeeRecord[]) => void;
-}
+import { useEmployeeData, EmployeeRecord } from '@/contexts/EmployeeDataContext';
 
 const loadingStates = [
   { text: "Reading file..." },
@@ -29,7 +15,8 @@ const loadingStates = [
   { text: "Finalizing import..." },
 ];
 
-const UploadDataModal = ({ onDataUploaded }: UploadDataModalProps) => {
+const UploadDataModal = () => {
+  const { setEmployeeData } = useEmployeeData();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -57,13 +44,13 @@ const UploadDataModal = ({ onDataUploaded }: UploadDataModalProps) => {
       await new Promise(resolve => setTimeout(resolve, 6000));
 
       const processedData: EmployeeRecord[] = jsonData.map((row: any) => ({
-        employeeCode: String(row['Employee Code'] || row['employeeCode'] || row['EmpCode'] || ''),
+        code: String(row['Employee Code'] || row['code'] || row['EmpCode'] || ''),
         name: String(row['Name'] || row['name'] || row['Employee Name'] || ''),
         department: String(row['Department'] || row['department'] || row['Dept'] || ''),
         collieryArea: String(row['Colliery Area'] || row['collieryArea'] || row['Area'] || ''),
         month: String(row['Month'] || row['month'] || ''),
-        gross: Number(row['Gross'] || row['gross'] || row['Salary'] || 0),
-        net: Number(row['Net'] || row['net'] || row['Net Paid'] || 0),
+        gross: String(row['Gross'] || row['gross'] || row['Salary'] || ''),
+        net: String(row['Net'] || row['net'] || row['Net Paid'] || ''),
       }));
 
       setRecordCount(processedData.length);
@@ -73,9 +60,8 @@ const UploadDataModal = ({ onDataUploaded }: UploadDataModalProps) => {
       // Re-open dialog to show success message
       setIsOpen(true);
 
-      if (onDataUploaded) {
-        onDataUploaded(processedData);
-      }
+      // Update shared employee data
+      setEmployeeData(processedData);
 
       toast.success(`Successfully imported ${processedData.length} records`);
 
@@ -90,7 +76,7 @@ const UploadDataModal = ({ onDataUploaded }: UploadDataModalProps) => {
       setIsOpen(true);
       toast.error('Failed to process file. Please check the format.');
     }
-  }, [onDataUploaded]);
+  }, [setEmployeeData]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
