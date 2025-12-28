@@ -1,34 +1,38 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, ChevronLeft, ChevronRight, Calendar, Building2, MapPin, Filter, X } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Calendar, Building2, MapPin, Filter, X, CalendarDays } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useEmployeeData } from '@/contexts/EmployeeDataContext';
 
-const months = ['All Months', 'Jan 2024', 'Feb 2024', 'Mar 2024', 'Apr 2024', 'May 2024', 'Jun 2024'];
+const currentYear = new Date().getFullYear();
+const years = ['All Years', ...Array.from({ length: 5 }, (_, i) => String(currentYear - i))];
+const months = ['All Months', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const departments = ['All Departments', 'Mining', 'HR', 'Finance', 'Operations', 'IT'];
 const collieryAreas = ['All Areas', 'Rajmahal', 'Sonepur Bazari', 'Kunustoria', 'Sripur', 'Kajora'];
 
 const PayrollTab = () => {
   const { employeeData } = useEmployeeData();
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedYear, setSelectedYear] = useState(String(currentYear));
   const [selectedMonth, setSelectedMonth] = useState('All Months');
   const [selectedDepartment, setSelectedDepartment] = useState('All Departments');
   const [selectedCollieryArea, setSelectedCollieryArea] = useState('All Areas');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const filteredData = employeeData.filter((employee) => {
+  const filteredData = useMemo(() => employeeData.filter((employee) => {
     const matchesSearch =
       employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       employee.code.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesMonth = selectedMonth === 'All Months' || employee.month === selectedMonth;
+    const matchesYear = selectedYear === 'All Years' || employee.month?.includes(selectedYear);
+    const matchesMonth = selectedMonth === 'All Months' || employee.month?.startsWith(selectedMonth);
     const matchesDepartment = selectedDepartment === 'All Departments' || employee.department === selectedDepartment;
     const matchesCollieryArea = selectedCollieryArea === 'All Areas' || employee.collieryArea === selectedCollieryArea;
-    return matchesSearch && matchesMonth && matchesDepartment && matchesCollieryArea;
-  });
+    return matchesSearch && matchesYear && matchesMonth && matchesDepartment && matchesCollieryArea;
+  }), [employeeData, searchQuery, selectedYear, selectedMonth, selectedDepartment, selectedCollieryArea]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice(
@@ -42,16 +46,18 @@ const PayrollTab = () => {
 
   const clearAllFilters = () => {
     setSearchQuery('');
+    setSelectedYear(String(currentYear));
     setSelectedMonth('All Months');
     setSelectedDepartment('All Departments');
     setSelectedCollieryArea('All Areas');
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = searchQuery || selectedMonth !== 'All Months' || selectedDepartment !== 'All Departments' || selectedCollieryArea !== 'All Areas';
+  const hasActiveFilters = searchQuery || selectedYear !== String(currentYear) || selectedMonth !== 'All Months' || selectedDepartment !== 'All Departments' || selectedCollieryArea !== 'All Areas';
 
   const activeFilterCount = [
     searchQuery,
+    selectedYear !== String(currentYear) ? selectedYear : null,
     selectedMonth !== 'All Months' ? selectedMonth : null,
     selectedDepartment !== 'All Departments' ? selectedDepartment : null,
     selectedCollieryArea !== 'All Areas' ? selectedCollieryArea : null,
@@ -96,7 +102,7 @@ const PayrollTab = () => {
           <span className="text-sm font-medium text-foreground">Filters</span>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -110,6 +116,31 @@ const PayrollTab = () => {
               }}
               className="pl-10 bg-background"
             />
+          </div>
+
+          {/* Year Filter */}
+          <div className="space-y-1.5">
+            <Select
+              value={selectedYear}
+              onValueChange={(value) => {
+                setSelectedYear(value);
+                resetFilters();
+              }}
+            >
+              <SelectTrigger className="bg-background">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                  <SelectValue placeholder="Select Year" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((year) => (
+                  <SelectItem key={year} value={year}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Month Filter */}
