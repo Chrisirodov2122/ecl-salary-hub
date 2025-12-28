@@ -119,7 +119,7 @@ const Dashboard = () => {
               transition={{ delay: 0.1, duration: 0.5 }}
               className="mb-6 lg:mb-8"
             >
-              <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Salary Dashboard</h1>
+              <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Salary Dashboard - {new Date().getFullYear()}</h1>
               <p className="text-muted-foreground mt-1">Overview of employee salary data and analytics</p>
             </motion.div>
 
