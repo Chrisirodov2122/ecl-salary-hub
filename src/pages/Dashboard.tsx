@@ -45,7 +45,12 @@ const Dashboard = () => {
           <div className="flex items-center justify-between h-16">
             {/* Logo and Nav */}
             <div className="flex items-center gap-8">
-              <img src={eclLogo} alt="ECL" className="h-10 object-contain" />
+              <img 
+                src={eclLogo} 
+                alt="ECL" 
+                className="h-10 object-contain cursor-pointer" 
+                onClick={() => setActiveTab('dashboard')}
+              />
               <nav className="hidden md:flex items-center gap-1">
                 {tabs.map((tab) => (
                   <button
@@ -183,7 +188,7 @@ const Dashboard = () => {
       <footer className="border-t border-border mt-8 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-muted-foreground">
-            © 2024 Eastern Coalfields Limited. ECL Salary Sight - All rights reserved.
+            © {new Date().getFullYear()} Eastern Coalfields Limited. ECL Salary Sight - All rights reserved.
           </p>
         </div>
       </footer>

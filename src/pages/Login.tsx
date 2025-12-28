@@ -246,7 +246,7 @@ const Login = () => {
           transition={{ delay: 1.2, duration: 0.5 }}
           className="text-center mt-6 text-sm text-white/50"
         >
-          <p>Copyright © 2025 Eastern Coalfields. All rights reserved.</p>
+          <p>Copyright © {new Date().getFullYear()} Eastern Coalfields. All rights reserved.</p>
         </motion.div>
       </motion.div>
     </div>
